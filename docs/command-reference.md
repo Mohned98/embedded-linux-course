@@ -1,5 +1,23 @@
 # Embedded Linux Command Reference
-## QEMU (Raspberry Pi)
+
+Quick-reference cheat sheet for the Embedded Linux & Device Driver course.
+
+## Table of Contents
+
+1. [QEMU Basics](#qemu-basics)
+2. [Raspberry Pi Image & Boot](#raspberry-pi-image--boot)
+3. [Running Raspberry Pi 3 in QEMU](#running-raspberry-pi-3-in-qemu)
+4. [Connecting via SSH](#connecting-via-ssh)
+5. [USB Device Sharing (WSL2)](#usb-device-sharing-wsl2)
+6. [Raspberry Pi Configuration](#raspberry-pi-configuration)
+7. [Init System & systemd](#init-system--systemd)
+8. [Boot Log Collection](#boot-log-collection)
+9. [Cross Toolchain (AArch64)](#cross-toolchain-aarch64)
+10. [U-Boot](#u-boot)
+
+---
+
+## QEMU Basics
 
 ```bash
 # List available QEMU executables
@@ -11,9 +29,10 @@ qemu-arm -cpu help
 # List supported ARM machine models
 qemu-system-aarch64 -machine help
 ```
+
 ---
 
-## Raspberry Pi Image Information
+## Raspberry Pi Image & Boot
 
 ```bash
 # Identify the image format
@@ -26,7 +45,7 @@ fdisk -l 2023-05-03-raspios-bullseye-arm64.img
 parted 2023-05-03-raspios-bullseye-arm64.img print
 ```
 
-## Serial Devices
+### Serial Devices
 
 ```bash
 # List ARM serial devices
@@ -39,7 +58,7 @@ ls /dev/ttyA*
 
 ---
 
-## Run Raspberry Pi 3 in QEMU
+## Running Raspberry Pi 3 in QEMU
 
 ```bash
 qemu-system-aarch64 \
@@ -71,7 +90,7 @@ qemu-system-aarch64 \
 
 ---
 
-## Connect via SSH
+## Connecting via SSH
 
 ```bash
 # Using localhost
@@ -85,8 +104,9 @@ ssh pi@127.0.0.1 -p 2222
 |---------|-------------|
 | `ssh -p 2222 pi@localhost` | Connect to the Raspberry Pi running in QEMU via SSH. |
 
+---
 
-## USB Device Sharing with WSL2 (usbipd)
+## USB Device Sharing (WSL2)
 
 ### Windows
 
@@ -125,7 +145,7 @@ sudo mount /dev/sdf2 /mnt/root
 
 ---
 
-## Raspberry Pi
+## Raspberry Pi Configuration
 
 ```bash
 # Configure Raspberry Pi (SSH, VNC, Interfaces, Localization, etc.)
@@ -140,7 +160,12 @@ hostname -I
 # Reboot Raspberry Pi
 sudo reboot
 ```
-## Init System
+
+---
+
+## Init System & systemd
+
+### Init System
 
 ```bash
 # Show the init system (PID 1)
@@ -167,7 +192,9 @@ sudo systemctl disable ssh
 # Print service
 systemctl cat ssh
 ```
-## Systemd Services
+
+### Systemd Services
+
 ```ini
 /etc/systemd/system/hello.service
 [Unit]
@@ -199,7 +226,8 @@ journalctl -u hello
 # Follow the service logs in real time
 journalctl -u hello -f
 ```
-## Systemd Targets
+
+### Systemd Targets
 
 ```bash
 # Show the default boot target
@@ -221,6 +249,8 @@ sudo systemctl enable hello
 ls -l /etc/systemd/system/multi-user.target.wants/
 ```
 
+---
+
 ## Boot Log Collection
 
 ### Raspberry Pi
@@ -239,7 +269,9 @@ scp pi@192.168.1.100:/home/pi/boot.log .
 scp -P 2222 pi@localhost:/home/pi/bootqemu.log .
 ```
 
-## Cross Toolchain (AArch64 Linux)
+---
+
+## Cross Toolchain (AArch64)
 
 ```bash
 # Show GCC version
@@ -295,12 +327,13 @@ aarch64-linux-gnu-gdb hello
 ls -lh
 ```
 
-## U-boot
+---
+
+## U-Boot
 
 ```bash
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-edges-linux-gnu-
 make rpi_4_defconfig
 make -j$(nproc)
-
 ```
