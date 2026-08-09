@@ -6,14 +6,33 @@ Quick-reference cheat sheet for the Embedded Linux & Device Driver course.
 
 1. [QEMU Basics](#qemu-basics)
 2. [Raspberry Pi Image & Boot](#raspberry-pi-image--boot)
+    1. [Serial Devices](#serial-devices)
 3. [Running Raspberry Pi 3 in QEMU](#running-raspberry-pi-3-in-qemu)
 4. [Connecting via SSH](#connecting-via-ssh)
 5. [USB Device Sharing (WSL2)](#usb-device-sharing-wsl2)
+    1. [Windows](#windows)
+    2. [WSL](#wsl)
 6. [Raspberry Pi Configuration](#raspberry-pi-configuration)
 7. [Init System & systemd](#init-system--systemd)
+    1. [Init System](#init-system)
+    2. [Systemd Services](#systemd-services)
+    3. [Systemd Targets](#systemd-targets)
 8. [Boot Log Collection](#boot-log-collection)
+    1. [Raspberry Pi](#raspberry-pi)
+    2. [WSL](#wsl-1)
 9. [Cross Toolchain (AArch64)](#cross-toolchain-aarch64)
 10. [U-Boot](#u-boot)
+    1. [Environment Variables](#environment-variables)
+    2. [Memory Commands](#memory-commands)
+    3. [MMC / SD Card](#mmc--sd-card)
+    4. [Device Tree (FDT)](#device-tree-fdt)
+    5. [Boot Commands](#boot-commands)
+        1. [Options](#options)
+        2. [Input Example (`boot_cmd.txt`)](#input-example-boot_cmdtxt)
+    6. [Image Commands](#image-commands)
+    7. [Miscellaneous](#miscellaneous)
+    8. [Typical Linux Boot Sequence](#typical-linux-boot-sequence)
+11. [Linux Kernel](#linux-kernel)
 
 ---
 
@@ -325,6 +344,10 @@ aarch64-linux-gnu-gdb hello
 
 # Compare between static and dynamic linking
 ls -lh
+
+# Add toolchain to PATH var
+export PATH=$HOME/x-tools/arm-edges-linux-gnueabihf/bin:$PATH
+export PATH=$HOME/x-tools/aarch64-edges-linux-gnu/bin:$PATH
 ```
 
 ---
@@ -335,5 +358,237 @@ ls -lh
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-edges-linux-gnu-
 make rpi_4_defconfig
+
+export ARCH=arm
+export CROSS_COMPILE=arm-edges-linux-gnueabihf-
+make vexpress_ca9x4_defconfig
+
+make menuconfig
 make -j$(nproc)
 ```
+
+```bash
+# Show all available commands
+help
+
+# Show help for a specific command
+help printenv
+
+# Display U-Boot version
+version
+
+# Display board information
+bdinfo
+
+# Display console devices
+coninfo
+
+```
+
+### Environment Variables
+
+```bash
+# Print all environment variables
+printenv
+
+# Print a specific variable
+printenv bootcmd
+printenv bootargs
+printenv kernel_addr_r
+
+# Create or modify an environment variable
+setenv bootdelay 5
+
+# Edit an environment variable
+editenv bootcmd
+
+# Read an environment variable from the terminal
+askenv serverip
+
+# Save environment variables permanently
+saveenv
+
+# Restore factory default environment
+env default -a
+
+# Print text or expand variables
+echo Hello
+echo ${bootcmd}
+
+# Execute commands stored in variables
+run bootcmd
+run cmd1 cmd2
+```
+
+### Memory Commands
+
+```bash
+# Display memory contents
+md ${kernel_addr_r}
+
+# Display multiple words
+md ${kernel_addr_r} 20
+
+# Modify memory (auto-increment address)
+mm ${loadaddr}
+mm 0x100000
+
+# Modify a fixed memory location
+nm ${loadaddr}
+
+# Write a value repeatedly into memory
+mw ${loadaddr} 0xAA 64
+
+# Copy memory
+cp.b ${kernel_addr_r} ${loadaddr} 0x1000
+
+# Compare memory regions
+cmp.b ${kernel_addr_r} ${loadaddr} 0x1000
+
+```
+
+### MMC / SD Card
+
+```bash
+# List MMC devices
+mmc list
+
+# Display MMC information
+mmc info
+
+# Display FAT filesystem information
+fatinfo mmc 0:1
+
+# List files in a FAT partition
+fatls mmc 0:1
+
+# Load a file from a FAT partition into RAM
+fatload mmc 0:1 ${kernel_addr_r} Image
+
+# List files in an ext4 partition
+ext4ls mmc 0:2 /
+
+# Load a file from an ext4 partition
+ext4load mmc 0:2 ${loadaddr} /boot/Image
+```
+
+### Device Tree (FDT)
+
+```bash
+# Select a Device Tree Blob
+fdt addr ${fdt_addr}
+
+# Select another Device Tree Blob
+fdt addr ${fdt_addr_r}
+
+# Display the FDT header
+fdt header
+
+# Print the entire Device Tree
+fdt print
+```
+
+### Boot Commands
+
+```bash
+# Boot using the default boot command
+boot
+
+# Boot an ARM64 Linux Image
+booti ${kernel_addr_r} - ${fdt_addr_r}
+
+# Boot a legacy uImage
+bootm ${loadaddr}
+
+# Boot a compressed zImage
+bootz ${kernel_addr_r} - ${fdt_addr_r}
+
+# Convert a text file containing U-Boot commands into a boot script image
+mkimage -T script -C none -n "Boot script" -d boot_cmd.txt boot.scr
+
+# Display information about the generated boot script
+mkimage -l boot.scr
+
+# Execute a boot script
+source ${scriptaddr}
+```
+
+#### Options
+
+| Option | Description |
+|--------|-------------|
+| `-T script` | Specifies that the image type is a U-Boot script. |
+| `-C none` | No compression is applied to the script. |
+| `-n "Boot script"` | Sets a descriptive name stored in the image header. |
+| `-d <input_file>` | Specifies the input text file containing U-Boot commands. |
+| `<output_file>` | The generated U-Boot script image (e.g., `boot.scr`). |
+
+#### Input Example (`boot_cmd.txt`)
+
+```bash
+fatload mmc 0:1 ${kernel_addr_r} Image
+fatload mmc 0:1 ${fdt_addr_r} bcm2711-rpi-4-b.dtb
+setenv bootargs "console=ttyAMA0,115200 root=/dev/mmcblk0p2 rw rootwait"
+booti ${kernel_addr_r} - ${fdt_addr_r}
+```
+
+### Image Commands
+
+```bash
+# Display information about a U-Boot image
+iminfo ${loadaddr}
+```
+
+### Miscellaneous
+
+```bash
+# Reset the board
+reset
+
+# Delay execution
+sleep 5
+```
+
+### Typical Linux Boot Sequence
+
+```bash
+# Select the SD card
+mmc dev 0
+
+# List boot partition files
+fatls mmc 0:1
+
+# Load the Linux kernel
+fatload mmc 0:1 ${kernel_addr_r} Image
+
+# Load the Device Tree
+fatload mmc 0:1 ${fdt_addr_r} bcm2711-rpi-4-b.dtb
+
+# Set kernel command line
+setenv bootargs "console=ttyAMA0,115200 root=/dev/mmcblk0p2 rw rootwait"
+
+# Boot Linux
+booti ${kernel_addr_r} - ${fdt_addr_r}
+
+
+# For Qemu TFTP
+tftp ${kernel_addr_r} ${kernel_image}
+tftp ${fdt_addr_r} ${fdt_file}
+tftp ${ramdisk_addr_r} ${initramfs}
+bootz ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}
+```
+
+---
+
+## Linux Kernel
+
+```bash
+export ARCH=arm
+export CROSS_COMPILE=arm-edges-linux-gnueabihf-
+make vexpress_defconfig
+make -j$(nproc) zImage dtbs
+```
+
+---
+
+
