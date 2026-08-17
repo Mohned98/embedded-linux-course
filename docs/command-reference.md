@@ -591,4 +591,40 @@ make -j$(nproc) zImage dtbs
 
 ---
 
+## buildroot
 
+```bash
+# Run linux-menuconfig with a clean PATH.
+# Useful when PATH contains Windows paths or tabs/spaces.
+env PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" make linux-menuconfig
+
+# Set a simple Bash prompt:
+# username@hostname:current_directory$
+export PS1='\u@\h:\w\$ '
+
+```
+
+---
+
+## LKM
+
+```bash
+# Display information about the kernel module.
+modinfo mymodule.ko
+
+# Insert/load the kernel module.
+insmod mymodule.ko
+
+# List currently loaded kernel modules.
+lsmod
+
+# Remove/unload the kernel module.
+rmmod mymodule
+
+# Read a module parameter from sysfs.
+cat /sys/module/hello/parameters/{param}
+
+# Write a new value to a module parameter.
+echo 40 > /sys/module/hello/parameters/{param}
+
+```
