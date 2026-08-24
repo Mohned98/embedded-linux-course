@@ -33,6 +33,10 @@ Quick-reference cheat sheet for the Embedded Linux & Device Driver course.
     7. [Miscellaneous](#miscellaneous)
     8. [Typical Linux Boot Sequence](#typical-linux-boot-sequence)
 11. [Linux Kernel](#linux-kernel)
+12. [buildroot](#buildroot)
+13. [LKM](#lkm)
+14. [Device Drivers](#device-drivers)
+15. [Device Tree](#device-tree)
 
 ---
 
@@ -626,5 +630,43 @@ cat /sys/module/hello/parameters/{param}
 
 # Write a new value to a module parameter.
 echo 40 > /sys/module/hello/parameters/{param}
+
+```
+
+## Device Drivers
+
+```bash
+# List all registered devices with their major numbers
+cat /proc/devices
+
+# Check gcc machine type
+gcc -dumpmachine
+
+# Check LED trigger type
+cat /sys/class/leds/PWR/trigger
+
+# Disable LED trigger
+echo none | sudo tee /sys/class/leds/PWR/trigger
+
+# Check LED brightness level
+cat /sys/class/leds/PWR/brightness
+
+# Enable LED (set brightness to 1)
+echo 1 | sudo tee /sys/class/leds/PWR/brightness
+
+```
+
+## Device Tree
+
+```bash
+# 1. Mount ConfigFS
+sudo mount -t configfs none /sys/kernel/config
+
+# 2. Create an overlay directory
+sudo mkdir /sys/kernel/config/device-tree/overlays/my_overlay
+
+# 3. Apply the compiled overlay
+sudo sh -c 'cat mychardev_overlay_example.dtbo > \
+    /sys/kernel/config/device-tree/overlays/my_overlay/dtbo'
 
 ```
