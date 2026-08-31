@@ -654,6 +654,15 @@ cat /sys/class/leds/PWR/brightness
 # Enable LED (set brightness to 1)
 echo 1 | sudo tee /sys/class/leds/PWR/brightness
 
+# List GPIO chips and the state/info of their lines
+gpioinfo
+
+# Set GPIO line 21 on gpiochip0 to logic HIGH (1)
+gpioset -c gpiochip0 21=1
+
+# Read a 32-bit value directly from physical memory address 0xFE200034 (e.g., a GPIO register GPLEV0)
+sudo busybox devmem 0xFE200034 32
+
 ```
 
 ## Device Tree
